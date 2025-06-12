@@ -11,7 +11,7 @@ app = Flask(__name__)
 def home():
     return "Bot running"
 
-@app.route(f"/{BOT_TOKEN}", methods=["POST"])
+@app.route("/webhook", methods=["POST"])
 def webhook():
     update = request.get_json()
     if update:
