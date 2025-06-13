@@ -1,17 +1,19 @@
-
 import os
 from flask import Flask, request, jsonify, send_from_directory
 import telebot
 from datetime import datetime
 
+# Inicializar bot
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 bot = telebot.TeleBot(BOT_TOKEN)
 
+# Inicializar Flask
 app = Flask(__name__)
 UPLOAD_FOLDER = 'media'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# Diccionario en memoria para almacenar la base de datos de medios
 media_db = {}
 
 @app.route("/")
@@ -64,21 +66,25 @@ def handle_media(message):
         file_name = message.document.file_name or f"document_{file_id}"
 
     if file_id:
-        file_info = bot.get_file(file_id)
-        downloaded_file = bot.download_file(file_info.file_path)
-        save_path = os.path.join(UPLOAD_FOLDER, file_name)
-        with open(save_path, "wb") as f:
-            f.write(downloaded_file)
+        try:
+            file_info = bot.get_file(file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+            save_path = os.path.join(UPLOAD_FOLDER, file_name)
+            with open(save_path, "wb") as f:
+                f.write(downloaded_file)
 
-        media_db[file_id] = {
-            "id": file_id,
-            "filename": file_name,
-            "type": file_type,
-            "path": f"/media/{file_id}/download",
-            "received_at": datetime.utcnow().isoformat() + "Z"
-        }
+            media_db[file_id] = {
+                "id": file_id,
+                "filename": file_name,
+                "type": file_type,
+                "path": f"/media/{file_id}/download",
+                "received_at": datetime.utcnow().isoformat() + "Z"
+            }
 
-        bot.send_message(message.chat.id, f"✅ Archivo guardado: {file_name}")
+            bot.send_message(message.chat.id, f"✅ Archivo guardado: {file_name}")
+        except Exception as e:
+            bot.send_message(message.chat.id, "❌ Error al descargar el archivo.")
+            print(f"Error: {e}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
