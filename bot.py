@@ -19,28 +19,29 @@ def webhook():
     return "ok", 200
 
 # Puedes personalizar esta función para guardar archivos, nombres, duración, etc.
-@bot.message_handler(content_types=["audio", "video", "voice", "document"])
-def handle_media(message):
-    file_id = None
-    file_name = "media"
+@bot.message_handler(func=lambda message: True, content_types=["text", "audio", "video", "voice", "document", "photo", "animation"])
+def catch_all_messages(message):
+    print(message)  # Solo visible en logs del servidor
 
-    if message.content_type == "audio":
-        file_id = message.audio.file_id
-        file_name = message.audio.file_name
-    elif message.content_type == "video" and message.video:
-        file_id = message.video.file_id
-        file_name = message.video.file_name
-    elif message.content_type == "voice":
-        file_id = message.voice.file_id
-    elif message.content_type == "document":
-        file_id = message.document.file_id
-        file_name = message.document.file_name
+    # Para que lo veas en Telegram también:
+    detected_types = []
+    if message.video:
+        detected_types.append("video")
+    if message.document:
+        detected_types.append("document")
+    if message.audio:
+        detected_types.append("audio")
+    if message.voice:
+        detected_types.append("voice")
+    if message.photo:
+        detected_types.append("photo")
+    if message.animation:
+        detected_types.append("animation")
 
-    if file_id:
-        file_info = bot.get_file(file_id)
-        bot.send_message(message.chat.id, f"🎥 Archivo guardado: {file_name}")
+    if detected_types:
+        bot.send_message(message.chat.id, f"Archivo detectado: {', '.join(detected_types)}")
     else:
-        bot.send_message(message.chat.id, "⚠️ No se pudo procesar el archivo.")
+        bot.send_message(message.chat.id, "Mensaje recibido, pero no se detectó archivo multimedia.")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
