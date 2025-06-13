@@ -44,6 +44,9 @@ def webhook():
 
 @bot.message_handler(content_types=["audio", "video", "voice", "document"])
 def handle_media(message):
+    from datetime import datetime
+    import traceback
+
     file_type = None
     file_name = "media"
     file_id = None
@@ -69,7 +72,7 @@ def handle_media(message):
         try:
             file_info = bot.get_file(file_id)
             downloaded_file = bot.download_file(file_info.file_path)
-            save_path = os.path.join(UPLOAD_FOLDER, file_name)
+            save_path = os.path.join("media", file_name)
             with open(save_path, "wb") as f:
                 f.write(downloaded_file)
 
@@ -82,9 +85,11 @@ def handle_media(message):
             }
 
             bot.send_message(message.chat.id, f"✅ Archivo guardado: {file_name}")
+
         except Exception as e:
-            bot.send_message(message.chat.id, "❌ Error al descargar el archivo.")
-            print(f"Error: {e}")
+            tb = traceback.format_exc()
+            print(f"❌ Error al descargar el archivo:\n{tb}")
+            bot.send_message(message.chat.id, f"❌ Error al descargar el archivo:\n{e}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
