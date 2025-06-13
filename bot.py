@@ -21,10 +21,26 @@ def webhook():
 # Puedes personalizar esta función para guardar archivos, nombres, duración, etc.
 @bot.message_handler(content_types=["audio", "video", "voice", "document"])
 def handle_media(message):
-    file_info = bot.get_file(message.audio.file_id if message.audio else message.video.file_id if message.video else message.voice.file_id if message.voice else message.document.file_id)
-    file_name = message.audio.file_name if message.audio else message.document.file_name if message.document else "media"
-    confirm_text = f"🎥 Archivo guardado: {file_name}"
-    bot.send_message(message.chat.id, confirm_text)
+    file_id = None
+    file_name = "media"
+
+    if message.content_type == "audio":
+        file_id = message.audio.file_id
+        file_name = message.audio.file_name
+    elif message.content_type == "video" and message.video:
+        file_id = message.video.file_id
+        file_name = message.video.file_name
+    elif message.content_type == "voice":
+        file_id = message.voice.file_id
+    elif message.content_type == "document":
+        file_id = message.document.file_id
+        file_name = message.document.file_name
+
+    if file_id:
+        file_info = bot.get_file(file_id)
+        bot.send_message(message.chat.id, f"🎥 Archivo guardado: {file_name}")
+    else:
+        bot.send_message(message.chat.id, "⚠️ No se pudo procesar el archivo.")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
